@@ -11,10 +11,12 @@ except ImportError:
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-var = {'api': '', 'found': 0}
+var = {'api': '', 'found': 0, 'ide': ''}
 
 
-def cls(): os.system('cls' if os.name == 'nt' else 'clear')
+def cls():
+    if not var['ide']:
+        os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def wait(sleep):
@@ -28,7 +30,8 @@ def wait(sleep):
         time.sleep(1)
 
 
-def scrape(triggers, api, path):
+def scrape(triggers, api, path, match):
+    match = all if match == 'all' else any
     try:
         api = requests.get(api, verify=False).text.splitlines()
         var['api'] = api[0]
@@ -41,22 +44,30 @@ def scrape(triggers, api, path):
             filename = url.split('/')[-1]
             try:
                 r = requests.get(url, verify=False).text
-                if any(trigger in r for trigger in triggers):
+                if match(trigger in r for trigger in triggers):
                     var['found'] = var['found']+1
                     if os.path.isdir(path) is not True:
                         os.makedirs(path)
                     with open(os.path.join(path, filename+'.txt'), 'w+') as f:
-                        f.write('Url:{}\n\n{}'.format(url, r))
+                        f.write('Url:{}\n\n{}'.format(url, r.encode('utf8')))
             except Exception:
                 pass
     except Exception:
         pass
 
 
-def pastebin_scan(triggers=['.ts', '/udp/', 'EXTINF', 'deviceMac', 'deviceUser', '00:1A:79', '&uid=', '.m3u8'],
-                  api='https://epg.serbianforum.org/rest/pastebin.txt', path='results', sleep=300):
+def pastebin_scan(triggers=['http', '.m3u8'], api='https://epg.serbianforum.org/rest/pastebin.txt', path='results', sleep=600, match=all, ide=False):
+    """
+    triggers| list    |   List of words to be match in pastebin file
+    api     | string  |   An api URL that cointains scraped raw urls, uses premium account and Whitelisted IP to avoid getting blocked
+    path    | string  |   A odirectory path that contains scanning results
+    sleep   | integer |   An integer that defines waiting time in SECONDS until next scan is started. To avoid IP ban set it min to 5 minuts (sleep=300)
+    match   | method  |   [all,any]. Bulit in method,  all()-all elements in the given iterable are found, any()- any element is found
+    ide     | bool    |   [True,False]. If set to True, python should stop clearing screen on IDE consoles and a terminal.
+    """
+    var['ide'] = ide
     while True:
-        scrape(triggers, api, path)
+        scrape(triggers, api, path, match)
         wait(sleep)
 
 
