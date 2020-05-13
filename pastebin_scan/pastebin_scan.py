@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import time
+from traceback import format_exc as log_error
 try:
     import requests
 except ImportError:
@@ -11,11 +12,11 @@ except ImportError:
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-var = {'api': '', 'found': 0, 'ide': ''}
+var = {'refreshed': '', 'found': 0, 'console': ''}
 
 
 def cls():
-    if not var['ide']:
+    if var['console']:
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
@@ -30,7 +31,7 @@ def wait(sleep):
         time.sleep(1)
 
 
-def scrape(triggers, api, path, match):
+def scrape(triggers, match, timeout, api, path):
     match = all if match == 'all' else any
     try:
         api = requests.get(api, verify=False).text.splitlines()
@@ -39,8 +40,8 @@ def scrape(triggers, api, path, match):
         for url in api[1::]:
             j += 1
             cls()
-            print ('Found:{} | Url:{} | API_Time:{} | Progress:{}/{}'.format(
-                var['found'], url, var['api'], j, len(api[1::])))
+            print ('Found:{} | Url:{} | API_refreshed:{} | Progress:{}/{}'.format(
+                var['found'], url, var['refreshed'], j, len(api[1::])))
             filename = url.split('/')[-1]
             try:
                 r = requests.get(url, verify=False).text
@@ -50,26 +51,29 @@ def scrape(triggers, api, path, match):
                         os.makedirs(path)
                     with open(os.path.join(path, filename+'.txt'), 'w+') as f:
                         f.write('Url:{}\n\n{}'.format(url, r.encode('utf8')))
+                time.sleep(timeout)
             except Exception:
-                pass
+                print (log_error)
     except Exception:
-        pass
+        print (log_error)
 
 
-def pastebin_scan(triggers=['http', '.m3u8'], api='https://epg.serbianforum.org/rest/pastebin.txt', path='results', sleep=600, match=all, ide=False):
+def pastebin_scan(triggers=['.m3u8'], match=any, timeout=1, api='https://epg.serbianforum.org/rest/pastebin.txt', path='pastebin_results', sleep=600, console=True):
     """
     triggers| list    |   List of words to be match in pastebin file
+    match   | method  |   [all,any]. Bulit in method,  all()-all elements in the given iterable are found, any()- any element is found
+    timeout | integer |   An integer that defines time in SECONDS until next scan is started. *To avoid getting IP ban set timeout=>1
     api     | string  |   An api URL that cointains scraped raw urls, uses premium account and Whitelisted IP to avoid getting blocked
     path    | string  |   A odirectory path that contains scanning results
-    sleep   | integer |   An integer that defines waiting time in SECONDS until next scan is started. To avoid IP ban set it min to 5 minuts (sleep=300)
-    match   | method  |   [all,any]. Bulit in method,  all()-all elements in the given iterable are found, any()- any element is found
-    ide     | bool    |   [True,False]. If set to True, python should stop clearing screen on IDE consoles and a terminal.
+    sleep   | integer |   An integer that defines waiting time in SECONDS until next scan is started. *To avoid getting IP ban set sleep=>600
+    console | bool    |   [True,False]. If set to False, python should print line by line and stop clearing screen on IDE console and a terminal.
     """
-    var['ide'] = ide
+    var['console'] = console
     while True:
-        scrape(triggers, api, path, match)
+        scrape(triggers, match, timeout, api, path)
         wait(sleep)
 
 
 if __name__ == "__main__":
-    pastebin_scan()
+    pastebin_scan(triggers=['m3u', '.ts', '/udp/', 'EXTINF', 'url', 'deviceMac',
+                            'deviceUser', 'MAC:00:1A:79', '&uid='], match=any, timeout=1, sleep=600)
