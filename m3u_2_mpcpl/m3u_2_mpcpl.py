@@ -1,3 +1,7 @@
+'''
+https://srv-file10.gofile.io/download/piOxg7/m3u_2_mpcpl.exe 
+Binary for Windows, RUN from same directory as .m3u playlist is located
+'''
 import os
 for file in os.listdir(os.getcwd()):
     if file.endswith('.m3u'):
