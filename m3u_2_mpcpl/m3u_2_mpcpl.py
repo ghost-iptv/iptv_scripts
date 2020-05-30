@@ -1,13 +1,16 @@
 '''
-https://srv-file10.gofile.io/download/piOxg7/m3u_2_mpcpl.exe 
-Binary for Windows, RUN from same directory as .m3u playlist is located
+Drag and drop various files formats (playlists like .m3u, .m3u8) to m3u_2_mpcpl.py to convert them to MPC-HC's playlists 
+Binary for Windows [m3u_2_mpcpl.exe]>> https://gofile.io/?c=3tdaL3
 '''
-import os
-for file in os.listdir(os.getcwd()):
-    if file.endswith('.m3u'):
-        with open(file, 'r') as f: m3u = [s for s in f.read().splitlines() if s.strip()]
+from sys import argv
+for file in sys.argv[1:]:
+    mpcpl=['MPCPLAYLIST\n']
+    j=0
+    with open(file, 'r') as f: m3u = [s for s in f.read().splitlines() if s.strip()]
+    for i in range(0, len(m3u)):
+        if m3u[i].startswith(('http://', 'https://', 'file://', 'rtsp://', 'rtmp://', 'mms://', 'ftp://', 'udp://')) :
+            mpcpl.append('{j},type,0\n{j},label,{name}\n{j},filename,{link}\n'.format(j=j, name=m3u[i-1].split(',', 1)[1].strip(), link=m3u[i]))
+            j+=1
+    if len(mpcpl)>=2:
         with open(file.rsplit('.', 1)[0]+'.mpcpl', 'w+') as f:
-            f.write('MPCPLAYLIST\n')
-            for i in range(0, len(m3u)):
-                if m3u[i].startswith(('http://', 'https://', 'file://', 'rtsp://', 'rtmp://', 'mms://', 'ftp://', 'udp://')) :
-                    f.write('{i},type,0\n{i},label,{name}\n{i},filename,{link}\n'.format(i=i//2, name=m3u[i-1].split(',', 1)[1].strip(), link=m3u[i]))
+            f.write('\n'.join(mpcpl))
