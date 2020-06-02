@@ -3,7 +3,7 @@ Drag and drop various files formats (playlists like .m3u, .m3u8) to m3u_2_mpcpl.
 Binary for Windows [m3u_2_mpcpl.exe]>> https://gofile.io/?c=3tdaL3
 '''
 from sys import argv
-for file in sys.argv[1:]:
+for file in argv[1:]:
     mpcpl=['MPCPLAYLIST\n']
     j=0
     with open(file, 'r') as f: m3u = [s for s in f.read().splitlines() if s.strip()]
